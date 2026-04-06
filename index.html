@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chuyến thám hiểm kì thú</title>
+    <style>
+        /* Khai báo font chữ từ file local */
+        @font-face {
+            font-family: 'GenshinFont';
+            src: url('ja-jp.ttf') format('truetype');
+        }
+
+        body {
+            margin: 0; height: 100vh; background-color: #000;
+            font-family: 'GenshinFont', sans-serif; overflow: hidden; color: white;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* --- CÁC SECTION CHÍNH --- */
+        .section {
+            display: none; position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+        .section.active { display: flex; }
+
+        /* ========================================================
+           GIAO DIỆN GỐC DÀNH CHO MÁY TÍNH (GIỮ NGUYÊN 100%)
+           ======================================================== */
+
+        /* --- 1. TRANG CHỦ, LUẬT CHƠI, CHỌN VÙNG VÀ ĐẾM NGƯỢC --- */
+        #home-section, #rules-section, #selection-section, #countdown-section {
+            background-image: url('bg-home.jpg'); 
+            background-size: cover; background-position: center;
+        }
+        
+        .home-overlay {
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(5px);
+            padding: 40px 60px; border-radius: 20px; text-align: center;
+            border: 2px solid rgba(123, 237, 255, 0.5);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+        .game-title {
+            font-size: 48px; color: #ffd700; margin: 0 0 30px 0;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8); letter-spacing: 3px;
+        }
+
+        /* --- 2. TRANG LUẬT CHƠI --- */
+        .rules-overlay {
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(5px);
+            padding: 40px 50px; border-radius: 20px; text-align: left;
+            border: 2px solid #7bedff; box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            max-width: 850px; font-size: 24px; line-height: 1.6;
+        }
+        .rules-overlay h2 { text-align: center; font-size: 40px; color: #ffd700; margin-top: 0; text-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
+        .rules-text ul { margin: 15px 0; padding-left: 40px; }
+        .rules-text li { margin-bottom: 15px; }
+        .rules-overlay .btn-center { display: flex; justify-content: center; margin-top: 40px; }
+
+        /* --- 3. TRANG CHỌN VÙNG ĐẤT --- */
+        .select-title {
+            font-size: 36px; margin-bottom: 40px; text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.6); padding: 15px 40px; border-radius: 15px; text-align: center;
+        }
+        .btn-group { display: flex; gap: 30px; }
+        .region-btn {
+            background: rgba(20, 35, 54, 0.8); border: 2px solid #7bedff;
+            color: white; padding: 20px 40px; border-radius: 15px;
+            font-size: 24px; font-family: 'GenshinFont', sans-serif; cursor: pointer;
+            transition: all 0.3s; box-shadow: 0 0 15px rgba(123, 237, 255, 0.3);
+        }
+        .region-btn:hover { background: rgba(123, 237, 255, 0.3); transform: translateY(-5px) scale(1.05); box-shadow: 0 0 25px rgba(123, 237, 255, 0.6); }
+
+        /* --- 4. MÀN HÌNH ĐẾM NGƯỢC --- */
+        .countdown-overlay { text-align: center; background: rgba(0, 0, 0, 0.6); padding: 50px; border-radius: 20px; backdrop-filter: blur(5px); }
+        .countdown-text { font-size: 36px; color: white; margin: 0; text-shadow: 0 0 15px rgba(255,255,255,0.5); }
+        .countdown-number { font-size: 120px; color: #ffd700; font-weight: bold; margin: 20px 0; text-shadow: 0 0 30px rgba(255, 215, 0, 0.8); animation: pulseCount 1s infinite; }
+        @keyframes pulseCount { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* --- 5. CUTSCENE & UNLOCK UI --- */
+        #bg-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+        .skip-btn { position: absolute; top: 30px; right: 40px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.4); color: white; padding: 8px 25px; border-radius: 20px; font-size: 16px; font-family: 'GenshinFont', sans-serif; cursor: pointer; z-index: 15; opacity: 0; pointer-events: none; transition: opacity 0.5s ease, background 0.2s ease, transform 0.2s; backdrop-filter: blur(4px); }
+        .skip-btn.show-skip { opacity: 1; pointer-events: auto; }
+        .skip-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); z-index: 2; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.8s ease; }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+
+        .unlock-container { display: flex; flex-direction: column; align-items: center; }
+        .icon-box, .title, .desc { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); }
+        .unlock-container.show .icon-box { opacity: 1; transform: translateY(0); transition-delay: 0.1s; }
+        .unlock-container.show .title { opacity: 1; transform: translateY(0); transition-delay: 0.4s; }
+        .unlock-container.show .desc { opacity: 1; transform: translateY(0); transition-delay: 0.7s; }
+
+        .icon-box { position: relative; width: 80px; height: 80px; margin-bottom: 25px; display: flex; justify-content: center; align-items: center; }
+        .diamond-bg { position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, rgba(62, 126, 155, 0.8) 0%, rgba(20, 35, 54, 0.9) 80%); border: 2px solid #7bedff; box-shadow: 0 0 25px rgba(123, 237, 255, 0.6); transform: rotate(45deg); border-radius: 8px; animation: glow 3s infinite alternate; }
+        @keyframes glow { from { box-shadow: 0 0 15px rgba(123, 237, 255, 0.4); } to { box-shadow: 0 0 30px rgba(123, 237, 255, 0.8); } }
+        .icon-svg { position: relative; z-index: 2; width: 40px; height: 40px; fill: #ffffff; filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8)); }
+        .text-box { text-align: center; max-width: 600px; }
+        .title { font-size: 30px; font-weight: 700; margin: 0 0 12px 0; text-shadow: 0 0 15px rgba(255, 255, 255, 0.4); letter-spacing: 2px; }
+        .desc { font-size: 16px; color: #b3e5fc; line-height: 1.6; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .next-btn-wrapper { position: absolute; bottom: 80px; opacity: 0; transition: opacity 1s ease-in; }
+        .next-btn-wrapper.show-btn { opacity: 1; pointer-events: auto; z-index: 20;}
+        
+        /* CÁC NÚT BẤM DÙNG CHUNG */
+        .primary-btn { background: rgba(123, 237, 255, 0.2); border: 2px solid #7bedff; color: white; padding: 12px 35px; border-radius: 30px; font-size: 20px; font-family: 'GenshinFont', sans-serif; cursor: pointer; animation: pulse 2s infinite; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+        .primary-btn:hover { background: rgba(123, 237, 255, 0.4); box-shadow: 0 0 20px rgba(123, 237, 255, 0.6); }
+        @keyframes pulse { 0% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.6; transform: scale(1); } }
+
+        /* --- 6. TRANG QUIZ CHUNG --- */
+        #quiz-section { background-size: cover; background-position: center; z-index: 50;}
+        .quiz-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); z-index: 51; transition: opacity 0.5s ease;}
+        
+        .quiz-container {
+            position: relative; z-index: 52; width: 85%; max-width: 900px;
+            max-height: 95vh; overflow-y: auto; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, 0.65); padding: 40px; border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8); backdrop-filter: blur(6px);
+            scrollbar-width: thin; scrollbar-color: #7bedff transparent;
+            transition: all 0.5s ease;
+        }
+
+        .question-box { background: rgba(20, 35, 54, 0.9); border: 2px solid #7bedff; border-radius: 15px; padding: 30px; width: 100%; box-shadow: 0 0 20px rgba(123, 237, 255, 0.3); text-align: center; margin-bottom: 30px; font-size: 26px; line-height: 1.5; text-shadow: 0 2px 4px rgba(0,0,0,0.8); transition: all 0.5s ease; box-sizing: border-box;}
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; box-sizing: border-box;}
+        .option-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.5); color: white; padding: 15px 20px; border-radius: 10px; font-size: 20px; font-family: 'GenshinFont', sans-serif; cursor: pointer; transition: all 0.2s ease; text-shadow: 0 1px 3px rgba(0,0,0,0.8); text-align: left; }
+        .option-btn:hover { background: rgba(123, 237, 255, 0.2); border-color: #7bedff; box-shadow: 0 0 15px rgba(123, 237, 255, 0.4); transform: scale(1.02); }
+        .option-btn.correct { background: rgba(76, 175, 80, 0.6); border-color: #4CAF50; box-shadow: 0 0 20px rgba(76, 175, 80, 0.6); }
+        .option-btn.wrong { background: rgba(244, 67, 54, 0.6); border-color: #F44336; box-shadow: 0 0 20px rgba(244, 67, 54, 0.6); }
+        
+        .feedback-text { margin-top: 25px; font-size: 24px; font-weight: bold; opacity: 0; transition: opacity 0.3s; text-shadow: 0 2px 5px rgba(0,0,0,0.8); line-height: 1.5; max-width: 800px; text-align: center; }
+        .feedback-text.show { opacity: 1; }
+        .feedback-text.success { color: #a5d6a7; } .feedback-text.error { color: #ef9a9a; }   
+
+        .end-buttons { display: none; gap: 20px; margin-top: 25px; justify-content: center; flex-wrap: wrap; width: 100%;}
+        
+        .fade-up { animation: fadeUpAnim 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; opacity: 0; transform: translateY(30px); }
+        @keyframes fadeUpAnim { to { opacity: 1; transform: translateY(0); } }
+
+        /* LỚP CHỮ CHUYÊN DỤNG (GIẢI LAO & KẾT THÚC) */
+        .expl-text { color: #ffffff; font-size: 18px; font-weight: normal; display: block; margin-top: 10px; }
+        .break-title { color: #ffd700; font-size: 36px; margin-bottom: 20px; text-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
+        .break-desc { font-size: 22px; line-height: 1.6; text-align: justify; color: #b3e5fc; padding: 0 15px; }
+        .victory-text { color: #ffd700; font-size: 36px; text-shadow: 0 0 20px rgba(255, 215, 0, 0.6); padding: 30px 20px; display: flex; justify-content: center; align-items: center; line-height: 1.6; }
+
+        /* ========================================================
+           RESPONSIVE DÀNH RIÊNG CHO ĐIỆN THOẠI/TABLET (< 768px)
+           Chỉ kích hoạt khi mở trên điện thoại, PC không bị ảnh hưởng!
+           ======================================================== */
+        @media screen and (max-width: 768px) {
+            .home-overlay { padding: 30px 20px; width: 90%; }
+            .game-title { font-size: 32px; margin-bottom: 20px; }
+            
+            .rules-overlay { padding: 30px 20px; width: 95%; max-height: 80vh; overflow-y: auto; font-size: 18px; }
+            .rules-overlay h2 { font-size: 28px; }
+            
+            .select-title { font-size: 24px; padding: 15px 20px; width: 90%; }
+            .btn-group { flex-direction: column; gap: 15px; width: 90%; align-items: stretch;}
+            .region-btn { width: 100%; padding: 15px; font-size: 20px; box-sizing: border-box;}
+            
+            .countdown-overlay { width: 90%; padding: 30px; }
+            .countdown-text { font-size: 24px; }
+            .countdown-number { font-size: 80px; }
+            
+            .title { font-size: 24px; }
+            .desc { font-size: 14px; padding: 0 10px; }
+            .next-btn-wrapper { bottom: 40px; width: 90%; text-align: center;}
+
+            .quiz-container { width: 95%; padding: 20px; max-height: 90vh;}
+            .question-box { font-size: 20px; padding: 20px 15px; }
+            .options-grid { grid-template-columns: 1fr; gap: 12px; }
+            .option-btn { font-size: 16px; padding: 12px 15px; }
+            
+            .primary-btn { font-size: 18px; padding: 12px 20px; width: 100%; box-sizing: border-box; text-align: center; }
+            .feedback-text { font-size: 20px !important; }
+            
+            .expl-text { font-size: 15px; }
+            .break-title { font-size: 24px; margin-bottom: 10px; }
+            .break-desc { font-size: 16px; padding: 0; }
+            .victory-text { font-size: 24px !important; padding: 20px 10px;}
+            .end-buttons { flex-direction: column; gap: 10px; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="sfx-unlock" src="20260406-0050-01.9023332.mp4" preload="auto"></audio>
+    <audio id="sfx-correct" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" preload="auto"></audio>
+    <audio id="sfx-wrong" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3" preload="auto"></audio>
+    <audio id="main-bgm" src="nhacnen.mp3" loop preload="auto"></audio>
+
+    <div id="home-section" class="section active">
+        <div class="home-overlay fade-up">
+            <h1 class="game-title">Chuyến thám hiểm kì thú</h1>
+            <button class="primary-btn" id="btn-start-home" onclick="showRules()">Bắt đầu thôi!</button>
+        </div>
+    </div>
+
+    <div id="rules-section" class="section">
+        <div class="rules-overlay fade-up">
+            <h2>Luật chơi</h2>
+            <div class="rules-text">
+                <p>Người chơi sẽ lần lượt đi qua 2 vùng đất là <b>Châu Đại Dương</b> và <b>Châu Nam Cực</b>.</p>
+                <p><b>- Nhiệm vụ:</b> Tại mỗi vùng đất, người chơi cần vượt qua 9 câu hỏi củng cố kiến thức.</p>
+                <ul>
+                    <li><b>Nếu trả lời đúng:</b> Được bước tiếp sang câu hỏi tiếp theo.</li>
+                    <li><b>Nếu trả lời sai:</b> Người chơi suy nghĩ và chọn lại đáp án cho đến khi đúng mới được đi tiếp.</li>
+                </ul>
+                <p>Trò chơi sẽ hoàn thành sau khi người chơi trả lời xong tất cả các câu hỏi của cả hai vùng đất.</p>
+            </div>
+            <div class="btn-center">
+                <button class="primary-btn" id="btn-continue-rules" onclick="showSelection()">Bấm để tiếp tục</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="selection-section" class="section">
+        <h2 class="select-title fade-up">Bạn muốn thám hiểm vùng đất nào?</h2>
+        <div class="btn-group fade-up" style="animation-delay: 0.2s;">
+            <button class="region-btn" onclick="startCountdown(1)">Vùng đất 1: Châu Đại Dương</button>
+            <button class="region-btn" onclick="startCountdown(2)">Vùng đất 2: Châu Nam Cực</button>
+        </div>
+    </div>
+
+    <div id="countdown-section" class="section">
+        <div class="countdown-overlay fade-up">
+            <h2 class="countdown-text">Chuyến thám hiểm sẽ bắt đầu trong</h2>
+            <div class="countdown-number" id="countdown-timer">5</div>
+            <h2 class="countdown-text">giây nữa</h2>
+        </div>
+    </div>
+
+    <div id="cutscene-section" class="section">
+        <video id="bg-video" playsinline></video>
+        <button class="skip-btn" id="skip-btn" onclick="triggerUnlockUI()">Bỏ qua ❯</button>
+
+        <div class="overlay" id="overlay">
+            <div class="unlock-container" id="ui-container">
+                <div class="icon-box">
+                    <div class="diamond-bg"></div>
+                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                </div>
+                <div class="text-box">
+                    <h1 class="title" id="unlock-title">Vùng đất</h1>
+                    <p class="desc">Cùng trả lời các câu hỏi sau để củng cố kiến thức về châu lục này nhé!</p>
+                </div>
+            </div>
+            <div class="next-btn-wrapper" id="next-btn-wrapper">
+                <button class="primary-btn" id="btn-start-cutscene" onclick="startQuizScene()">Bấm để bắt đầu</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="quiz-section" class="section">
+        <div class="quiz-overlay"></div>
+        <div class="quiz-container">
+            <div class="question-box fade-up" id="question-text">Đang tải câu hỏi...</div>
+            <div class="options-grid fade-up" id="options-box" style="animation-delay: 0.2s;"></div>
+            <div class="feedback-text" id="feedback-message"></div>
+            
+            <button class="primary-btn fade-up" id="next-q-btn" style="display:none; margin-top:25px;" onclick="goToNextQuestion()">Câu tiếp theo ❯</button>
+            <button class="primary-btn fade-up" id="continue-break-btn" style="display:none; margin-top:25px;" onclick="endBreak()">Tiếp tục thôi!</button>
+            <button class="primary-btn fade-up" id="finish-btn" style="display:none; margin-top:25px;" onclick="finishQuiz()">Bấm để kết thúc</button>
+            
+            <div class="end-buttons fade-up" id="end-buttons"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // DỮ LIỆU CÂU HỎI CHÂU ĐẠI DƯƠNG (Region 1)
+        // ==========================================
+        const oceaniaData = [
+            { question: "Câu 1: Châu Đại Dương nằm chủ yếu ở bán cầu nào?", options: ["A. Bắc và Tây", "B. Nam và Đông", "C. Bắc và Đông", "D. Nam và Tây"], correctIndex: 1 },
+            { question: "Câu 2: Nếu rừng ở phía đông Australia bị suy giảm mạnh, hậu quả trực tiếp có thể là:", options: ["A. Tăng lượng mưa ở nội địa", "B. Tăng diện tích sông ngòi", "C. Giảm nhiệt độ toàn khu vực", "D. Giảm khả năng chắn gió ẩm từ biển"], correctIndex: 3 },
+            { question: "Câu 3: Sự xuất hiện của các loài như gấu Koala và Kangaroo ở Australia chủ yếu do nguyên nhân nào sau đây?", options: ["A. Lục địa bị cô lập lâu dài với các châu lục khác", "B. Khí hậu lạnh giá quanh năm", "C. Có nhiều rừng rậm nhiệt đới", "D. Con người di cư mang theo"], correctIndex: 0 },
+            { question: "Câu 4: Đặc điểm dân cư châu Đại Dương là:", options: ["A. Mật độ dân số cao và đồng đều", "B. Phân bố đều khắp các đảo", "C. Dân cư thưa, phân bố không đều", "D. Chỉ có người bản địa sinh sống"], correctIndex: 2 },
+            { question: "Câu 5: Australia nổi tiếng thế giới về xuất khẩu loại sản phẩm nông nghiệp nào?", options: ["A. Lúa gạo và cà phê.", "B. Cao su và hồ tiêu.", "C. Lông cừu, len, thịt bò và sữa.", "D. Dầu cọ và dừa."], correctIndex: 2 },
+            { question: "Câu 6: Khu vực địa hình nào ở Australia có độ cao trung bình dưới 500m và bề mặt là hoang mạc cát, đá?", options: ["A. Dãy Trường Sơn phía Đông.", "B. Đồng bằng trung tâm.", "C. Vùng sơn nguyên phía Tây.", "D. Quần đảo New Zealand."], correctIndex: 2 },
+            { question: "Câu 7: Đặc điểm nổi bật của sinh vật châu Đại Dương là:", options: ["A. Ít loài đặc hữu", "B. Nhiều loài thú có túi và động vật đặc hữu", "C. Chủ yếu là động vật hoang mạc", "D. Không có rừng nhiệt đới"], correctIndex: 1 },
+            { question: "Câu 8: Yếu tố nào giúp Châu Đại Dương phát triển mạnh ngành khai khoáng?", options: ["A. Dân số đông", "B. Trình độ khoa học – công nghệ cao", "C. Nhiều lao động giá rẻ", "D. Gần các thị trường lớn"], correctIndex: 1 },
+            { question: "Câu 9: “Phân bố dân cư không đều ở Châu Đại Dương chủ yếu do tác động của lịch sử di cư hơn là điều kiện tự nhiên.”", options: ["A. Đúng", "B. Sai"], correctIndex: 1, explanation: "Nhận định SAI vì:\n- Nguyên nhân chính là do điều kiện tự nhiên.\n- Nội địa Châu Đại Dương (đặc biệt Australia) khô hạn, hoang mạc → rất khó sinh sống.\n- Vùng ven biển có khí hậu ôn hòa → tập trung dân cư.\n- Lịch sử di cư (người châu Âu) chỉ làm tăng dân ở vùng thuận lợi, không phải là yếu tố quyết định." }
+        ];
+
+        // ==========================================
+        // DỮ LIỆU CÂU HỎI CHÂU NAM CỰC (Region 2)
+        // ==========================================
+        const antarcticaData = [
+            { question: "Câu 1: Tỉ lệ diện tích bề mặt lục địa Nam Cực bị lớp băng dày bao phủ là bao nhiêu?", options: ["A. 50%.", "B. 85,5%.", "C. 99,8%.", "D. 100%."], correctIndex: 2 },
+            { question: "Câu 2: Nguyên nhân chính khiến Châu Nam Cực gần như không có dân cư sinh sống lâu dài là:", options: ["A. Thiếu tài nguyên", "B. Xa các châu lục khác", "C. Khí hậu quá lạnh và khắc nghiệt", "D. Không có động vật"], correctIndex: 2 },
+            { question: "Câu 3: Tại sao dù được bao quanh bởi đại dương, châu Nam Cực vẫn có lượng mưa rất thấp?", options: ["A. Do gió mùa hoạt động yếu", "B. Không khí rất lạnh, chứa ít hơi nước", "C. Bị chắn bởi núi cao", "D. Do ảnh hưởng của dòng biển nóng"], correctIndex: 1 },
+            { question: "Câu 4: Tại sao Châu Nam Cực được gọi là \"Cực lạnh\" của thế giới?", options: ["A. Vì nằm ở vùng vĩ độ cao nhất, góc chiếu Mặt Trời thấp.", "B. Do bề mặt băng trắng phản xạ hầu hết bức xạ nhiệt Mặt Trời.", "C. Do có các luồng gió cực mạnh (bão tuyết) thường xuyên xảy ra.", "D. Tất cả các ý trên đều đúng."], correctIndex: 3 },
+            { question: "Câu 5: Nếu băng ở Châu Nam Cực tan hết, hậu quả lớn nhất đối với Trái Đất là gì?", options: ["A. Tăng diện tích đất liền", "B. Giảm nhiệt độ toàn cầu", "C. Tăng lượng mưa ở sa mạc", "D. Mực nước biển dâng cao"], correctIndex: 3 },
+            { question: "Câu 6: Khoáng sản ở Châu Nam Cực chưa được khai thác rộng rãi chủ yếu do:", options: ["A. Không có nhu cầu", "B. Điều kiện tự nhiên khắc nghiệt và chi phí cao", "C. Công nghệ chưa phát triển", "D. Khoáng sản kém chất lượng"], correctIndex: 1 },
+            { question: "Câu 7: Trạm nghiên cứu nào sau đây thuộc quyền vận hành của Nga tại Nam Cực?", options: ["A. Trạm Vostok.", "B. Trạm McMurdo.", "C. Trạm Qinling.", "D. Trạm Amundsen-Scott"], correctIndex: 0 },
+            { question: "Câu 8: Dòng biển lạnh bao quanh châu Nam Cực có tác động gì đến khí hậu toàn cầu?", options: ["A. Làm tăng nhiệt độ toàn cầu", "B. Ngăn cản sự trao đổi nước giữa các đại dương", "C. Giữ lạnh khu vực Nam Cực và ảnh hưởng đến tuần hoàn đại dương", "D. Làm tăng lượng mưa ở xích đạo"], correctIndex: 2 },
+            { question: "Câu 9: “Điều kiện tự nhiên là yếu tố quyết định lớn nhất đến mọi hoạt động của con người ở Châu Nam Cực.” Nhận định này ĐÚNG hay SAI?", options: ["A. Đúng", "B. Sai"], correctIndex: 0, explanation: "Giải thích:\n- Khí hậu cực lạnh (nhiệt độ rất thấp, gió mạnh, bão tuyết) → con người không thể sinh sống lâu dài.\n- Băng phủ dày quanh năm → cản trở giao thông, xây dựng và khai thác tài nguyên.\n- Môi trường khắc nghiệt → chi phí sinh hoạt, nghiên cứu rất cao.\n- Hệ sinh thái nghèo nàn → không thể phát triển nông nghiệp." }
+        ];
+
+        // --- CÁC BIẾN HỆ THỐNG ---
+        let currentRegion = 1; 
+        let activeQuizData = [];
+        let currentQuestion = 0;
+        let isAnswering = false;
+        let isTriggered = false;
+        let countdownTimer;
+        let completedRegions = []; 
+
+        const mainBGM = document.getElementById('main-bgm');
+        const video = document.getElementById('bg-video');
+        const sfxUnlock = document.getElementById('sfx-unlock');
+
+        // BỘ CẢM BIẾN THÔNG MINH: Tự động tắt âm thanh khi thoát tab/thu nhỏ ứng dụng (CHỈ TRÊN ĐIỆN THOẠI)
+        document.addEventListener("visibilitychange", function() {
+            // Kiểm tra xem có phải giao diện di động không (màn hình nhỏ hơn 768px hoặc dùng hệ điều hành di động)
+            const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                if (document.hidden) {
+                    // Nếu tab bị ẩn, kiểm tra xem nhạc/video có đang phát không rồi lưu lại trạng thái
+                    if (!mainBGM.paused) mainBGM.setAttribute('data-was-playing', 'true');
+                    if (!video.paused) video.setAttribute('data-was-playing', 'true');
+                    
+                    // Tạm dừng
+                    mainBGM.pause();
+                    video.pause();
+                } else {
+                    // Nếu quay lại tab, khôi phục lại nhạc/video dựa trên trạng thái đã lưu
+                    if (mainBGM.getAttribute('data-was-playing') === 'true') {
+                        mainBGM.play().catch(e => console.log(e));
+                        mainBGM.removeAttribute('data-was-playing');
+                    }
+                    if (video.getAttribute('data-was-playing') === 'true') {
+                        video.play().catch(e => console.log(e));
+                        video.removeAttribute('data-was-playing');
+                    }
+                }
+            }
+            // Trên máy tính (isMobile == false) -> Không làm gì cả, nhạc vẫn chạy vèo vèo!
+        });
+
+        // Đảm bảo nút trên máy tính không bị to ra do ảnh hưởng của CSS Mobile trước đó
+        function fixDesktopButtons() {
+            const btns = ['btn-start-home', 'btn-continue-rules', 'btn-start-cutscene', 'next-q-btn', 'continue-break-btn', 'finish-btn'];
+            if(window.innerWidth > 768) {
+                btns.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) { el.style.maxWidth = "max-content"; el.style.margin = "0 auto"; }
+                });
+            } else {
+                btns.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) { el.style.maxWidth = "100%"; }
+                });
+            }
+        }
+        window.addEventListener('resize', fixDesktopButtons);
+        window.addEventListener('load', fixDesktopButtons);
+
+        function switchSection(sectionId) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        function showRules() {
+            completedRegions = []; 
+            mainBGM.volume = 1.0;
+            mainBGM.play().catch(e => console.log(e));
+            switchSection('rules-section');
+        }
+
+        function showSelection() { switchSection('selection-section'); }
+
+        function returnHome() {
+            video.pause();
+            clearInterval(countdownTimer);
+            mainBGM.volume = 1.0;
+            if (mainBGM.paused) mainBGM.play();
+            switchSection('home-section');
+        }
+
+        function startCountdown(regionId) {
+            currentRegion = regionId;
+            activeQuizData = (regionId === 1) ? oceaniaData : antarcticaData;
+            
+            if (regionId === 1) {
+                document.getElementById('quiz-section').style.backgroundImage = "url('bg đại dương.jpg')";
+            } else {
+                document.getElementById('quiz-section').style.backgroundImage = "url('bg nam cực.jpg')";
+            }
+
+            switchSection('countdown-section');
+            let counter = 5;
+            document.getElementById('countdown-timer').innerText = counter;
+            clearInterval(countdownTimer);
+            countdownTimer = setInterval(() => {
+                counter--;
+                if (counter > 0) { document.getElementById('countdown-timer').innerText = counter; } 
+                else { clearInterval(countdownTimer); playCutscene(regionId); }
+            }, 1000);
+        }
+
+        function playCutscene(regionId) {
+            isTriggered = false;
+            document.getElementById('skip-btn').classList.remove('show-skip');
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('ui-container').classList.remove('show');
+            document.getElementById('next-btn-wrapper').classList.remove('show-btn');
+            
+            if (regionId === 1) {
+                video.src = "châu đại dương.mp4";
+                document.getElementById('unlock-title').innerText = "Vùng đất 1: Châu Đại Dương";
+            } else {
+                video.src = "doraemonn.mp4";
+                document.getElementById('unlock-title').innerText = "Vùng đất 2: Châu Nam Cực";
+            }
+
+            mainBGM.pause();
+            switchSection('cutscene-section');
+            video.volume = 1.0;
+            video.currentTime = 0;
+            video.play();
+        }
+
+        function triggerUnlockUI() {
+            if (isTriggered) return;
+            isTriggered = true;
+            document.getElementById('skip-btn').classList.remove('show-skip');
+            video.volume = 0.15; 
+            document.getElementById('overlay').classList.add('active');
+            setTimeout(() => {
+                sfxUnlock.currentTime = 0; sfxUnlock.play();
+                document.getElementById('ui-container').classList.add('show');
+                setTimeout(() => { document.getElementById('next-btn-wrapper').classList.add('show-btn'); }, 3000);
+            }, 400);
+        }
+
+        video.addEventListener('timeupdate', function() {
+            if (video.currentTime >= 5 && !isTriggered) document.getElementById('skip-btn').classList.add('show-skip');
+            if (video.currentTime >= 32 && !isTriggered) triggerUnlockUI();
+        });
+
+        // --- HÀM QUIZ ---
+        function startQuizScene() {
+            video.pause();
+            switchSection('quiz-section');
+            mainBGM.volume = 0.15; 
+            mainBGM.play();
+            currentQuestion = 0;
+            document.getElementById('end-buttons').style.display = 'none'; 
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnswering = false; 
+            const qData = activeQuizData[currentQuestion];
+            const qText = document.getElementById('question-text');
+            const optionsBox = document.getElementById('options-box');
+            const feedback = document.getElementById('feedback-message');
+
+            feedback.classList.remove('show');
+            document.getElementById('next-q-btn').style.display = 'none';
+            document.getElementById('finish-btn').style.display = 'none';
+            document.getElementById('end-buttons').style.display = 'none';
+            document.getElementById('continue-break-btn').style.display = 'none'; 
+
+            qText.className = "question-box fade-up"; 
+            optionsBox.classList.remove('fade-up');
+            void qText.offsetWidth; 
+            
+            qText.innerText = qData.question;
+            optionsBox.innerHTML = '';
+            
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsBox.appendChild(btn);
+            });
+
+            optionsBox.classList.add('fade-up');
+            fixDesktopButtons(); // Cập nhật lại nút
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            if (isAnswering) return; 
+            isAnswering = true;
+
+            const qData = activeQuizData[currentQuestion];
+            const sfxCorrect = document.getElementById('sfx-correct');
+            const sfxWrong = document.getElementById('sfx-wrong');
+            const feedback = document.getElementById('feedback-message');
+
+            if (selectedIndex === qData.correctIndex) {
+                btnElement.classList.add('correct');
+                sfxCorrect.currentTime = 0; sfxCorrect.play();
+                
+                let successMsg = "Đúng rồi! Giỏi quá!";
+                if (qData.explanation) {
+                    let formattedExpl = qData.explanation.replace(/\n/g, '<br>');
+                    successMsg += "<br><br><span class='expl-text'>" + formattedExpl + "</span>";
+                }
+
+                feedback.innerHTML = successMsg;
+                feedback.classList.add('show', 'success');
+
+                if (currentQuestion === activeQuizData.length - 1) {
+                    document.getElementById('finish-btn').style.display = 'block';
+                } else {
+                    document.getElementById('next-q-btn').style.display = 'block';
+                }
+                fixDesktopButtons();
+            } else {
+                btnElement.classList.add('wrong');
+                sfxWrong.currentTime = 0; sfxWrong.play();
+                feedback.innerText = "Tiếc quá! Thử lại một lần nữa nhé!";
+                feedback.classList.add('show', 'error');
+
+                setTimeout(() => {
+                    btnElement.classList.remove('wrong');
+                    feedback.classList.remove('show');
+                    isAnswering = false; 
+                }, 1500);
+            }
+        }
+
+        function goToNextQuestion() {
+            document.getElementById('next-q-btn').style.display = 'none';
+            currentQuestion++;
+            
+            if (currentQuestion === 4) {
+                showBreakScreen();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        // --- HÀM XỬ LÝ MÀN HÌNH GIẢI LAO GIỮA GIỜ ---
+        function showBreakScreen() {
+            const qText = document.getElementById('question-text');
+            const optionsBox = document.getElementById('options-box');
+            const feedback = document.getElementById('feedback-message');
+
+            feedback.classList.remove('show');
+            qText.className = "question-box fade-up"; 
+            optionsBox.classList.remove('fade-up');
+            void qText.offsetWidth; 
+            
+            let breakContent = "";
+
+            if (currentRegion === 1) {
+                breakContent = `
+                    <div class="break-title">Giải lao giữa giờ - Có thể bạn chưa biết?</div>
+                    <div class="break-desc">
+                        <b>Kangaroo không thể đi lùi:</b> Cấu tạo đuôi và chân sau của Kangaroo khiến chúng chỉ có thể tiến về phía trước. Chính vì thế, hình ảnh Kangaroo xuất hiện trên Quốc huy của nước Úc với ý nghĩa: <i>Luôn tiến lên, không bao giờ lùi bước.</i>
+                    </div>
+                `;
+            } else {
+                breakContent = `
+                    <div class="break-title">Giải lao giữa giờ - Có thể bạn chưa biết?</div>
+                    <div class="break-desc">
+                        <b>Núi lửa phun ra... vàng:</b> Núi lửa Erebus là minh chứng cho sự kỳ diệu của Châu Nam Cực. Dù nằm tại nơi có nhiệt độ thấp kỷ lục, ngọn núi này vẫn hoạt động mạnh mẽ và giải phóng khoảng 80g bụi vàng nguyên chất vào bầu khí quyển mỗi ngày. Những hạt vàng li ti này theo gió bay xa tận 1.000km khắp "lục địa trắng". Chính sự giao thoa giữa lửa và băng đã biến Erebus thành biểu tượng của sức sống mãnh liệt: dù ở nơi lạnh lẽo nhất hành tinh, Trái Đất vẫn không ngừng tuôn trào những nguồn năng lượng quý giá và rực rỡ nhất.
+                    </div>
+                `;
+            }
+
+            qText.innerHTML = breakContent;
+            optionsBox.innerHTML = '';
+            document.getElementById('continue-break-btn').style.display = 'block';
+            fixDesktopButtons();
+        }
+
+        function endBreak() {
+            document.getElementById('continue-break-btn').style.display = 'none';
+            loadQuestion(); 
+        }
+
+        // --- KẾT THÚC VÙNG ĐẤT ---
+        function finishQuiz() {
+            sfxUnlock.currentTime = 0;
+            sfxUnlock.play();
+
+            document.getElementById('finish-btn').style.display = 'none';
+            document.getElementById('options-box').innerHTML = '';
+            document.getElementById('feedback-message').classList.remove('show');
+            
+            const qText = document.getElementById('question-text');
+            
+            if (currentRegion === 1) {
+                qText.innerText = "CHÚC MỪNG TẤT CẢ CÁC BẠN ĐÃ HOÀN THÀNH CHUYẾN THÁM HIỂM VÙNG ĐẤT CHÂU ĐẠI DƯƠNG!";
+            } else {
+                qText.innerText = "CHÚC MỪNG TẤT CẢ CÁC BẠN ĐÃ HOÀN THÀNH CHUYẾN THÁM HIỂM VÙNG ĐẤT CHÂU NAM CỰC!";
+            }
+            
+            qText.className = "question-box victory-text fade-up";
+
+            if (!completedRegions.includes(currentRegion)) {
+                completedRegions.push(currentRegion);
+            }
+
+            const endBtns = document.getElementById('end-buttons');
+            endBtns.innerHTML = ''; 
+            endBtns.style.display = 'flex';
+            
+            if (completedRegions.length === 1) {
+                if (currentRegion === 1) {
+                    endBtns.innerHTML += `<button class="primary-btn" onclick="startCountdown(2)">Đi tiếp tới Châu Nam Cực</button>`;
+                } else {
+                    endBtns.innerHTML += `<button class="primary-btn" onclick="startCountdown(1)">Đi tiếp tới Châu Đại Dương</button>`;
+                }
+                endBtns.innerHTML += `<button class="primary-btn" onclick="returnHome()">Quay về trang chủ</button>`;
+            } else {
+                endBtns.innerHTML += `<button class="primary-btn" onclick="returnHome()">Quay về trang chủ</button>`;
+            }
+            
+            // Xử lý riêng cho nút end-buttons khi resize
+            if(window.innerWidth > 768) {
+                Array.from(endBtns.children).forEach(btn => btn.style.maxWidth = "max-content");
+            }
+        }
+    </script>
+</body>
+</html>
