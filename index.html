@@ -12,7 +12,6 @@
         @font-face {
             font-family: 'GenshinFont';
             src: url('ja-jp.ttf') format('truetype');
-            /* Bùa chú 2: Đợi tải xong font đẹp mới hiện chữ, không dùng font xấu */
             font-display: block; 
         }
 
@@ -21,6 +20,34 @@
             font-family: 'GenshinFont', sans-serif; overflow: hidden; color: white;
             display: flex; justify-content: center; align-items: center;
         }
+
+        /* ========================================================
+           MÀN HÌNH LOADING CHUYÊN NGHIỆP
+           ======================================================== */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #142336; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.6s ease;
+        }
+        .spinner {
+            width: 70px; height: 70px;
+            border: 6px solid rgba(123, 237, 255, 0.1);
+            border-top: 6px solid #7bedff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 20px rgba(123, 237, 255, 0.4);
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text {
+            margin-top: 25px; font-size: 26px; color: #ffd700;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.6); letter-spacing: 2px;
+            animation: pulseText 1.5s infinite; text-align: center; padding: 0 20px;
+        }
+        .loading-subtext {
+            margin-top: 10px; font-size: 16px; color: #b3e5fc; text-align: center;
+        }
+        @keyframes pulseText { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
 
         /* --- CÁC SECTION CHÍNH --- */
         .section {
@@ -31,10 +58,8 @@
         .section.active { display: flex; }
 
         /* ========================================================
-           GIAO DIỆN GỐC DÀNH CHO MÁY TÍNH (GIỮ NGUYÊN 100%)
+           GIAO DIỆN GỐC DÀNH CHO MÁY TÍNH
            ======================================================== */
-
-        /* --- 1. TRANG CHỦ, LUẬT CHƠI, CHỌN VÙNG VÀ ĐẾM NGƯỢC --- */
         #home-section, #rules-section, #selection-section, #countdown-section {
             background-image: url('bg-home.jpg'); 
             background-size: cover; background-position: center;
@@ -51,7 +76,6 @@
             text-shadow: 0 0 20px rgba(255, 215, 0, 0.8); letter-spacing: 3px;
         }
 
-        /* --- 2. TRANG LUẬT CHƠI --- */
         .rules-overlay {
             background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(5px);
             padding: 40px 50px; border-radius: 20px; text-align: left;
@@ -63,7 +87,6 @@
         .rules-text li { margin-bottom: 15px; }
         .rules-overlay .btn-center { display: flex; justify-content: center; margin-top: 40px; }
 
-        /* --- 3. TRANG CHỌN VÙNG ĐẤT --- */
         .select-title {
             font-size: 36px; margin-bottom: 40px; text-shadow: 0 2px 10px rgba(0,0,0,0.8);
             background: rgba(0,0,0,0.6); padding: 15px 40px; border-radius: 15px; text-align: center;
@@ -77,14 +100,12 @@
         }
         .region-btn:hover { background: rgba(123, 237, 255, 0.3); transform: translateY(-5px) scale(1.05); box-shadow: 0 0 25px rgba(123, 237, 255, 0.6); }
 
-        /* --- 4. MÀN HÌNH ĐẾM NGƯỢC --- */
         .countdown-overlay { text-align: center; background: rgba(0, 0, 0, 0.6); padding: 50px; border-radius: 20px; backdrop-filter: blur(5px); }
         .countdown-text { font-size: 36px; color: white; margin: 0; text-shadow: 0 0 15px rgba(255,255,255,0.5); }
         .countdown-number { font-size: 120px; color: #ffd700; font-weight: bold; margin: 20px 0; text-shadow: 0 0 30px rgba(255, 215, 0, 0.8); animation: pulseCount 1s infinite; }
         @keyframes pulseCount { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        /* --- 5. CUTSCENE & UNLOCK UI --- */
-        /* Trên PC, object-fit là cover để phủ kín màn hình rộng */
+        /* Video Cutscene */
         #bg-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; background-color: #000; }
         
         .skip-btn { position: absolute; top: 30px; right: 40px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.4); color: white; padding: 8px 25px; border-radius: 20px; font-size: 16px; font-family: 'GenshinFont', sans-serif; cursor: pointer; z-index: 15; opacity: 0; pointer-events: none; transition: opacity 0.5s ease, background 0.2s ease, transform 0.2s; backdrop-filter: blur(4px); }
@@ -110,7 +131,6 @@
         .next-btn-wrapper { position: absolute; bottom: 80px; opacity: 0; transition: opacity 1s ease-in; }
         .next-btn-wrapper.show-btn { opacity: 1; pointer-events: auto; z-index: 20;}
         
-        /* CÁC NÚT BẤM DÙNG CHUNG */
         .primary-btn { background: rgba(123, 237, 255, 0.2); border: 2px solid #7bedff; color: white; padding: 12px 35px; border-radius: 30px; font-size: 20px; font-family: 'GenshinFont', sans-serif; cursor: pointer; animation: pulse 2s infinite; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
         .primary-btn:hover { background: rgba(123, 237, 255, 0.4); box-shadow: 0 0 20px rgba(123, 237, 255, 0.6); }
         @keyframes pulse { 0% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.6; transform: scale(1); } }
@@ -151,7 +171,6 @@
         .break-desc { font-size: 22px; line-height: 1.6; text-align: justify; color: #b3e5fc; padding: 0 15px; }
         .victory-text { color: #ffd700; font-size: 36px; text-shadow: 0 0 20px rgba(255, 215, 0, 0.6); padding: 30px 20px; display: flex; justify-content: center; align-items: center; min-height: 200px; }
 
-
         /* ========================================================
            RESPONSIVE DÀNH RIÊNG CHO ĐIỆN THOẠI/TABLET (< 768px)
            ======================================================== */
@@ -168,9 +187,10 @@
             .countdown-text { font-size: 24px; }
             .countdown-number { font-size: 80px; }
             
-            /* --- Bóp video cutscene vừa vặn dọc trên điện thoại --- */
+            /* --- KHÓA LỆNH: BÓP VIDEO CUTSCENE VỪA VẶN MÀN HÌNH DỌC --- */
             #bg-video {
-                object-fit: contain; /* Thu nhỏ giữ nguyên tỷ lệ, không cắt mép */
+                object-fit: contain !important; 
+                background-color: #000;
             }
 
             .title { font-size: 24px; }
@@ -195,6 +215,12 @@
     </style>
 </head>
 <body>
+
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <div class="loading-text">Đang tải dữ liệu thám hiểm...</div>
+        <div class="loading-subtext">Vui lòng chờ một chút nhé!</div>
+    </div>
 
     <audio id="sfx-unlock" src="20260406-0050-01.9023332.mp4" preload="auto"></audio>
     <audio id="sfx-correct" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" preload="auto"></audio>
@@ -279,8 +305,19 @@
     </div>
 
     <script>
+        // TÍNH NĂNG MỚI: TẮT MÀN HÌNH LOADING SAU KHI TẢI XONG TOÀN BỘ DATA
+        window.addEventListener('load', function() {
+            const loadingScreen = document.getElementById('loading-screen');
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 600);
+            }, 500); // Tạo độ trễ nhẹ để trải nghiệm mượt mà
+        });
+
         // ==========================================
-        // DỮ LIỆU CÂU HỎI CHÂU ĐẠI DƯƠNG (Region 1)
+        // DỮ LIỆU CÂU HỎI
         // ==========================================
         const oceaniaData = [
             { question: "Câu 1: Châu Đại Dương nằm chủ yếu ở bán cầu nào?", options: ["A. Bắc và Tây", "B. Nam và Đông", "C. Bắc và Đông", "D. Nam và Tây"], correctIndex: 1 },
@@ -294,9 +331,6 @@
             { question: "Câu 9: “Phân bố dân cư không đều ở Châu Đại Dương chủ yếu do tác động của lịch sử di cư hơn là điều kiện tự nhiên.”", options: ["A. Đúng", "B. Sai"], correctIndex: 1, explanation: "Nhận định SAI vì:\n- Nguyên nhân chính là do điều kiện tự nhiên.\n- Nội địa Châu Đại Dương (đặc biệt Australia) khô hạn, hoang mạc → rất khó sinh sống.\n- Vùng ven biển có khí hậu ôn hòa → tập trung dân cư.\n- Lịch sử di cư (người châu Âu) chỉ làm tăng dân ở vùng thuận lợi, không phải là yếu tố quyết định." }
         ];
 
-        // ==========================================
-        // DỮ LIỆU CÂU HỎI CHÂU NAM CỰC (Region 2)
-        // ==========================================
         const antarcticaData = [
             { question: "Câu 1: Tỉ lệ diện tích bề mặt lục địa Nam Cực bị lớp băng dày bao phủ là bao nhiêu?", options: ["A. 50%.", "B. 85,5%.", "C. 99,8%.", "D. 100%."], correctIndex: 2 },
             { question: "Câu 2: Nguyên nhân chính khiến Châu Nam Cực gần như không có dân cư sinh sống lâu dài là:", options: ["A. Thiếu tài nguyên", "B. Xa các châu lục khác", "C. Khí hậu quá lạnh và khắc nghiệt", "D. Không có động vật"], correctIndex: 2 },
@@ -309,7 +343,6 @@
             { question: "Câu 9: “Điều kiện tự nhiên là yếu tố quyết định lớn nhất đến mọi hoạt động của con người ở Châu Nam Cực.” Nhận định này ĐÚNG hay SAI?", options: ["A. Đúng", "B. Sai"], correctIndex: 0, explanation: "Giải thích:\n- Khí hậu cực lạnh (nhiệt độ rất thấp, gió mạnh, bão tuyết) → con người không thể sinh sống lâu dài.\n- Băng phủ dày quanh năm → cản trở giao thông, xây dựng và khai thác tài nguyên.\n- Môi trường khắc nghiệt → chi phí sinh hoạt, nghiên cứu rất cao.\n- Hệ sinh thái nghèo nàn → không thể phát triển nông nghiệp." }
         ];
 
-        // --- CÁC BIẾN HỆ THỐNG ---
         let currentRegion = 1; 
         let activeQuizData = [];
         let currentQuestion = 0;
@@ -509,7 +542,6 @@
             document.getElementById('next-q-btn').style.display = 'none';
             currentQuestion++;
             
-            // XỬ LÝ PHẦN GIẢI LAO SAU CÂU 4
             if (currentQuestion === 4) {
                 showBreakScreen();
             } else {
