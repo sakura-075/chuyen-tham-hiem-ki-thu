@@ -28,7 +28,7 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #142336; z-index: 9999;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: opacity 0.6s ease;
+            transition: opacity 0.5s ease;
         }
         .spinner {
             width: 70px; height: 70px;
@@ -131,6 +131,7 @@
         .next-btn-wrapper { position: absolute; bottom: 80px; opacity: 0; transition: opacity 1s ease-in; }
         .next-btn-wrapper.show-btn { opacity: 1; pointer-events: auto; z-index: 20;}
         
+        /* CÁC NÚT BẤM DÙNG CHUNG */
         .primary-btn { background: rgba(123, 237, 255, 0.2); border: 2px solid #7bedff; color: white; padding: 12px 35px; border-radius: 30px; font-size: 20px; font-family: 'GenshinFont', sans-serif; cursor: pointer; animation: pulse 2s infinite; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
         .primary-btn:hover { background: rgba(123, 237, 255, 0.4); box-shadow: 0 0 20px rgba(123, 237, 255, 0.6); }
         @keyframes pulse { 0% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.6; transform: scale(1); } }
@@ -187,7 +188,6 @@
             .countdown-text { font-size: 24px; }
             .countdown-number { font-size: 80px; }
             
-            /* --- KHÓA LỆNH: BÓP VIDEO CUTSCENE VỪA VẶN MÀN HÌNH DỌC --- */
             #bg-video {
                 object-fit: contain !important; 
                 background-color: #000;
@@ -218,14 +218,14 @@
 
     <div id="loading-screen">
         <div class="spinner"></div>
-        <div class="loading-text">Đang tải dữ liệu thám hiểm...</div>
-        <div class="loading-subtext">Vui lòng chờ một chút nhé!</div>
+        <div class="loading-text">Đang chuẩn bị hành trang...</div>
+        <div class="loading-subtext">Vui lòng chờ một xíu nhé!</div>
     </div>
 
-    <audio id="sfx-unlock" src="20260406-0050-01.9023332.mp4" preload="auto"></audio>
-    <audio id="sfx-correct" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" preload="auto"></audio>
-    <audio id="sfx-wrong" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3" preload="auto"></audio>
-    <audio id="main-bgm" src="nhacnen.mp3" loop preload="auto"></audio>
+    <audio id="sfx-unlock" src="20260406-0050-01.9023332.mp4" preload="metadata"></audio>
+    <audio id="sfx-correct" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" preload="metadata"></audio>
+    <audio id="sfx-wrong" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3" preload="metadata"></audio>
+    <audio id="main-bgm" src="nhacnen.mp3" loop preload="metadata"></audio>
 
     <div id="home-section" class="section active">
         <div class="home-overlay fade-up">
@@ -269,7 +269,7 @@
     </div>
 
     <div id="cutscene-section" class="section">
-        <video id="bg-video" playsinline preload="auto" poster="bg-home.jpg"></video>
+        <video id="bg-video" playsinline preload="metadata" poster="bg-home.jpg"></video>
         <button class="skip-btn" id="skip-btn" onclick="triggerUnlockUI()">Bỏ qua ❯</button>
 
         <div class="overlay" id="overlay">
@@ -305,15 +305,16 @@
     </div>
 
     <script>
-        // TÍNH NĂNG MỚI: TẮT MÀN HÌNH LOADING SAU KHI TẢI XONG TOÀN BỘ DATA
-        window.addEventListener('load', function() {
+        // TÍNH NĂNG MỚI: TẮT MÀN HÌNH LOADING NHANH SAU KHI HTML & GIAO DIỆN CƠ BẢN TẢI XONG
+        document.addEventListener('DOMContentLoaded', function() {
             const loadingScreen = document.getElementById('loading-screen');
+            // Thay vì đợi Video, chỉ đợi 1.2s cho trang web lên hình là tắt Loading luôn
             setTimeout(() => {
                 loadingScreen.style.opacity = '0';
                 setTimeout(() => {
                     loadingScreen.style.display = 'none';
-                }, 600);
-            }, 500); // Tạo độ trễ nhẹ để trải nghiệm mượt mà
+                }, 500);
+            }, 1200); 
         });
 
         // ==========================================
@@ -355,7 +356,6 @@
         const video = document.getElementById('bg-video');
         const sfxUnlock = document.getElementById('sfx-unlock');
 
-        // TÍNH NĂNG MỚI: DỪNG NHẠC KHI ẨN TRÌNH DUYỆT TRÊN ĐIỆN THOẠI
         let wasMusicPlaying = false;
         let wasVideoPlaying = false;
 
@@ -549,7 +549,6 @@
             }
         }
 
-        // --- HÀM XỬ LÝ MÀN HÌNH GIẢI LAO GIỮA GIỜ ---
         function showBreakScreen() {
             const qText = document.getElementById('question-text');
             const optionsBox = document.getElementById('options-box');
@@ -588,7 +587,6 @@
             loadQuestion(); 
         }
 
-        // --- KẾT THÚC VÙNG ĐẤT ---
         function finishQuiz() {
             sfxUnlock.currentTime = 0;
             sfxUnlock.play();
