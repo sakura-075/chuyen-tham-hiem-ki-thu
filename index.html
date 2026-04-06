@@ -22,7 +22,7 @@
         }
 
         /* ========================================================
-           MÀN HÌNH LOADING CHUYÊN NGHIỆP
+           MÀN HÌNH LOADING MỞ ĐẦU CHUYÊN NGHIỆP
            ======================================================== */
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -48,6 +48,20 @@
             margin-top: 10px; font-size: 16px; color: #b3e5fc; text-align: center;
         }
         @keyframes pulseText { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
+
+        /* ========================================================
+           MÀN HÌNH CHỜ RIÊNG CHO VIDEO CUTSCENE (TÍNH NĂNG MỚI)
+           ======================================================== */
+        .video-loading-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.65); /* Lớp nền đen mờ đè lên poster */
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 10; /* Nằm trên video, nằm dưới nút skip */
+            opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+        }
+        .video-loading-overlay.show {
+            opacity: 1; pointer-events: auto;
+        }
 
         /* --- CÁC SECTION CHÍNH --- */
         .section {
@@ -112,7 +126,7 @@
         .skip-btn.show-skip { opacity: 1; pointer-events: auto; }
         .skip-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
 
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); z-index: 2; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.8s ease; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); z-index: 12; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.8s ease; }
         .overlay.active { opacity: 1; pointer-events: auto; }
 
         .unlock-container { display: flex; flex-direction: column; align-items: center; }
@@ -270,6 +284,12 @@
 
     <div id="cutscene-section" class="section">
         <video id="bg-video" playsinline preload="metadata" poster="bg-home.jpg"></video>
+        
+        <div id="video-loading" class="video-loading-overlay">
+            <div class="spinner"></div>
+            <div class="loading-subtext" style="margin-top: 20px; font-size: 22px; color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.8); animation: pulseText 1.5s infinite;">Chờ xíu nha, sắp xong rồi...</div>
+        </div>
+
         <button class="skip-btn" id="skip-btn" onclick="triggerUnlockUI()">Bỏ qua ❯</button>
 
         <div class="overlay" id="overlay">
@@ -305,10 +325,9 @@
     </div>
 
     <script>
-        // TÍNH NĂNG MỚI: TẮT MÀN HÌNH LOADING NHANH SAU KHI HTML & GIAO DIỆN CƠ BẢN TẢI XONG
+        // TẮT MÀN HÌNH LOADING NHANH SAU KHI HTML & GIAO DIỆN CƠ BẢN TẢI XONG
         document.addEventListener('DOMContentLoaded', function() {
             const loadingScreen = document.getElementById('loading-screen');
-            // Thay vì đợi Video, chỉ đợi 1.2s cho trang web lên hình là tắt Loading luôn
             setTimeout(() => {
                 loadingScreen.style.opacity = '0';
                 setTimeout(() => {
@@ -355,6 +374,18 @@
         const mainBGM = document.getElementById('main-bgm');
         const video = document.getElementById('bg-video');
         const sfxUnlock = document.getElementById('sfx-unlock');
+        const videoLoadingOverlay = document.getElementById('video-loading');
+
+        // BỘ CẢM BIẾN NHẬN DIỆN MẠNG YẾU/TẢI VIDEO
+        video.addEventListener('waiting', () => {
+            if (!isTriggered) videoLoadingOverlay.classList.add('show');
+        });
+        video.addEventListener('playing', () => {
+            videoLoadingOverlay.classList.remove('show');
+        });
+        video.addEventListener('canplay', () => {
+            videoLoadingOverlay.classList.remove('show');
+        });
 
         let wasMusicPlaying = false;
         let wasVideoPlaying = false;
@@ -422,6 +453,9 @@
             document.getElementById('ui-container').classList.remove('show');
             document.getElementById('next-btn-wrapper').classList.remove('show-btn');
             
+            // Hiện ngay loading chờ video trong tích tắc
+            videoLoadingOverlay.classList.add('show');
+
             if (regionId === 1) {
                 video.src = "châu đại dương.mp4";
                 document.getElementById('unlock-title').innerText = "Vùng đất 1: Châu Đại Dương";
@@ -434,13 +468,14 @@
             switchSection('cutscene-section');
             video.volume = 1.0;
             video.currentTime = 0;
-            video.play();
+            video.play().catch(e => console.log(e));
         }
 
         function triggerUnlockUI() {
             if (isTriggered) return;
             isTriggered = true;
             document.getElementById('skip-btn').classList.remove('show-skip');
+            videoLoadingOverlay.classList.remove('show'); // Đảm bảo giấu loading đi khi mở UI
             video.volume = 0.15; 
             document.getElementById('overlay').classList.add('active');
             setTimeout(() => {
